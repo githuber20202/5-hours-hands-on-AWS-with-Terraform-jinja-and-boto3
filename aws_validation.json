@@ -1,0 +1,6 @@
+{
+    "instance_id": "i-085592090ccb0dd77",
+    "instance_state": "running",
+    "public_ip": "52.55.182.40",
+    "load_balancer_dns": "my-lb-582669025.us-east-1.elb.amazonaws.com"
+}

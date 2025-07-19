@@ -19,6 +19,7 @@ terraform.tfvars.json
 override.tf
 override.tf.json
 *.backup
+*.hcl
 
 # AWS credentials & sensitive
 .aws/
