@@ -1,0 +1,17 @@
+US:
+1.use variables for more dynamicly code.
+For example:
+variable "aws_region" {
+  default = "us-east-1"
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+2.
+
+--------------------------------------------------------------
+Bugs:
+1.The function "validate_aws_resources" wrote twice in main.py file..
+2.
