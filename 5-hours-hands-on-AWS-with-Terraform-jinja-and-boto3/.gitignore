@@ -1,9 +1,0 @@
-5-Hour Hands-On Test_ AWS Automation with Terraform, Jinja2, and Boto3.docx
-*.hcl
-*.tfstate
-venv/
-.env/
-.terraform
-tfplan
-*.xlsx
-template.tf.j2

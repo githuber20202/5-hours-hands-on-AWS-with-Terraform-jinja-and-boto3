@@ -62,50 +62,55 @@ def run_terraform():
 
     tf = Terraform(working_dir='.')
 
-    # === INIT ===
-    print("🔧 terraform init:")
-    return_code, stdout, stderr = tf.init()
-    print(stdout)
-    if stderr:
-        print("\n⚠️ stderr from init:")
-        print(stderr)
-    if return_code != 0:
-        print("❌ terraform init failed!")
+    try:
+        # === INIT ===
+        print("🔧 terraform init:")
+        return_code, stdout, stderr = tf.init()
+        print(stdout)
+        if stderr:
+            print("\n⚠️ stderr from init:")
+            print(stderr)
+        if return_code != 0:
+            print("❌ terraform init failed!")
+            return False
+
+        # === PLAN ===
+        print("\n🔎 terraform plan:")
+        return_code, stdout, stderr = tf.plan(no_color=IsFlagged)
+        print(stdout)
+
+        # הדפסת stderr אם קיים
+        if stderr:
+            print("\n⚠️ stderr from plan:")
+            print(stderr)
+
+        # ניתוח חכם של תוצאה
+        if "Error:" in stdout or "Error:" in stderr:
+            print("❌ Detected errors in terraform plan output.")
+            return False
+
+        if return_code != 0:
+            print("⚠️ Non-zero return code from terraform plan, but no error message found.")
+            print("🟡 Continuing cautiously...")
+
+        # === APPLY ===
+        print("\n🚀 terraform apply:")
+        return_code, stdout, stderr = tf.apply(skip_plan=True, capture_output=False, no_color=IsFlagged)
+        print(stdout)
+        if stderr:
+            print("\n⚠️ stderr from apply:")
+            print(stderr)
+        if return_code != 0:
+            print("❌ terraform apply failed!")
+            return False
+
+        print("\n✅ Terraform apply completed successfully.")
+        return True
+    
+    
+    except Exception as e:
+        print(f"\n❌ Exception occurred during Terraform execution: {e}")
         return False
-
-    # === PLAN ===
-    print("\n🔎 terraform plan:")
-    return_code, stdout, stderr = tf.plan(no_color=IsFlagged)
-    print(stdout)
-
-    # הדפסת stderr אם קיים
-    if stderr:
-        print("\n⚠️ stderr from plan:")
-        print(stderr)
-
-    # ניתוח חכם של תוצאה
-    if "Error:" in stdout or "Error:" in stderr:
-        print("❌ Detected errors in terraform plan output.")
-        return False
-
-    if return_code != 0:
-        print("⚠️ Non-zero return code from terraform plan, but no error message found.")
-        print("🟡 Continuing cautiously...")
-
-    # === APPLY ===
-    print("\n🚀 terraform apply:")
-    return_code, stdout, stderr = tf.apply(skip_plan=True, capture_output=False, no_color=IsFlagged)
-    print(stdout)
-    if stderr:
-        print("\n⚠️ stderr from apply:")
-        print(stderr)
-    if return_code != 0:
-        print("❌ terraform apply failed!")
-        return False
-
-    print("\n✅ Terraform apply completed successfully.")
-    return True
-
 
 
 def render_template(context, template_path="terraform_template.j2", output_path="generated.tf"):
@@ -180,6 +185,17 @@ def get_user_input():
         "availability_zone": az,
         "load_balancer_name": lb_name
     }
+
+def destroy_infrastructure():
+    print("\n🧨 Destroying infrastructure...")
+    tf = Terraform(working_dir='.')
+    return_code, stdout, stderr = tf.destroy(auto_approve=True)
+    print(stdout)
+    if stderr:
+        print("⚠️ stderr from destroy:")
+        print(stderr)
+    print("\n✅ Destroy completed.")
+    exit(0)
     
 # ✅ Runner
 if __name__ == "__main__":
@@ -187,12 +203,14 @@ if __name__ == "__main__":
     print("\n✅ User input collected successfully:\n")
     for key, value in user_inputs.items():
         print(f"{key}: {value}")
-        
+
     render_template(user_inputs)
-    
+
     success = run_terraform()
     if not success:
-        print("❌ Terraform execution failed. Exiting.")
-        exit(1)
-        
+        print("❌ Terraform execution failed. Triggering destroy...")
+        destroy_infrastructure()
+
     validate_aws_resources(lb_name=user_inputs['load_balancer_name'])
+    
+    
